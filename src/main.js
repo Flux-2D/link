@@ -75,8 +75,57 @@ try {
 
   const keys = new Set();
   const movementKeys = new Set(["KeyW", "KeyA", "KeyS", "KeyD", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"]);
+  const playerHeight = 0;
+  const jumpVelocity = 8.5;
+  const gravity = 22;
+  let verticalVelocity = 0;
+  let isGrounded = true;
+
+  // Camera orbit state. Dragging the canvas changes the horizontal and vertical view angles.
+  let isDragging = false;
+  let lastPointerX = 0;
+  let lastPointerY = 0;
+  let cameraYaw = 0;
+  let cameraPitch = 0.42;
+  const cameraDistance = 10;
+  const cameraHeight = 2.2;
+
+  renderer.domElement.style.cursor = "grab";
+  renderer.domElement.addEventListener("pointerdown", (event) => {
+    isDragging = true;
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+    renderer.domElement.style.cursor = "grabbing";
+    renderer.domElement.setPointerCapture(event.pointerId);
+  });
+  renderer.domElement.addEventListener("pointermove", (event) => {
+    if (!isDragging) return;
+    const sensitivity = 0.006;
+    cameraYaw -= (event.clientX - lastPointerX) * sensitivity;
+    cameraPitch -= (event.clientY - lastPointerY) * sensitivity;
+    cameraPitch = THREE.MathUtils.clamp(cameraPitch, 0.12, 1.25);
+    lastPointerX = event.clientX;
+    lastPointerY = event.clientY;
+  });
+  renderer.domElement.addEventListener("pointerup", (event) => {
+    isDragging = false;
+    renderer.domElement.style.cursor = "grab";
+    renderer.domElement.releasePointerCapture(event.pointerId);
+  });
+  renderer.domElement.addEventListener("pointercancel", () => {
+    isDragging = false;
+    renderer.domElement.style.cursor = "grab";
+  });
+
   window.addEventListener("keydown", (event) => {
-    if (movementKeys.has(event.code)) { event.preventDefault(); keys.add(event.code); }
+    if (movementKeys.has(event.code) || event.code === "Space") {
+      event.preventDefault();
+      keys.add(event.code);
+      if (event.code === "Space" && isGrounded) {
+        verticalVelocity = jumpVelocity;
+        isGrounded = false;
+      }
+    }
   });
   window.addEventListener("keyup", (event) => keys.delete(event.code));
 
@@ -94,14 +143,31 @@ try {
     if (keys.has("KeyD") || keys.has("ArrowRight")) direction.x += 1;
     if (direction.lengthSq() > 0) {
       direction.normalize();
+      // W/A/S/D move relative to the direction the camera is facing.
+      direction.applyAxisAngle(new THREE.Vector3(0, 1, 0), cameraYaw);
       player.position.addScaledVector(direction, delta * 8);
       player.rotation.y = Math.atan2(direction.x, direction.z);
     }
     player.position.x = THREE.MathUtils.clamp(player.position.x, -maxWorldDistance, maxWorldDistance);
     player.position.z = THREE.MathUtils.clamp(player.position.z, -maxWorldDistance, maxWorldDistance);
 
+    if (!isGrounded || verticalVelocity > 0) {
+      verticalVelocity -= gravity * delta;
+      player.position.y += verticalVelocity * delta;
+      if (player.position.y <= playerHeight) {
+        player.position.y = playerHeight;
+        verticalVelocity = 0;
+        isGrounded = true;
+      }
+    }
+
     cameraTarget.set(player.position.x, 1.3, player.position.z);
-    desiredCameraPosition.set(player.position.x, player.position.y + 6.5, player.position.z + 10);
+    const horizontalDistance = Math.cos(cameraPitch) * cameraDistance;
+    desiredCameraPosition.set(
+      player.position.x + Math.sin(cameraYaw) * horizontalDistance,
+      player.position.y + cameraHeight + Math.sin(cameraPitch) * cameraDistance,
+      player.position.z + Math.cos(cameraYaw) * horizontalDistance
+    );
     camera.position.lerp(desiredCameraPosition, 1 - Math.pow(0.001, delta));
     camera.lookAt(cameraTarget);
     positionReadout.textContent = `X ${player.position.x.toFixed(1)}   Z ${player.position.z.toFixed(1)}`;

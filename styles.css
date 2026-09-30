@@ -1,0 +1,63 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #101721;
+  color: #f5f1e8;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #game-shell {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body { background: #101721; }
+
+#game-canvas-container, #game-canvas-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  padding: 28px;
+}
+
+.brand-panel, .controls-panel, .coordinates-panel {
+  width: fit-content;
+  padding: 14px 18px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 14px;
+  background: rgb(10 16 24 / 65%);
+  box-shadow: 0 12px 30px rgb(0 0 0 / 18%);
+  backdrop-filter: blur(10px);
+}
+
+.brand-panel { position: absolute; top: 28px; left: 28px; }
+.controls-panel { position: absolute; right: 28px; top: 28px; text-align: center; }
+.coordinates-panel { position: absolute; left: 28px; bottom: 28px; }
+
+.eyebrow, .panel-label, .hint, .status, h1, #position-readout { margin: 0; }
+.eyebrow, .panel-label { color: #f2b35f; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; }
+h1 { margin-top: 5px; font-size: clamp(1.15rem, 2vw, 1.7rem); letter-spacing: -0.03em; }
+.status, .hint { margin-top: 8px; color: #b8c4cc; font-size: 0.78rem; }
+.status-dot { display: inline-block; width: 7px; height: 7px; margin-right: 6px; border-radius: 50%; background: #66d38b; box-shadow: 0 0 10px #66d38b; }
+.key-row { display: flex; gap: 6px; margin-top: 10px; }
+.key { display: grid; width: 30px; height: 30px; place-items: center; border: 1px solid rgb(255 255 255 / 25%); border-radius: 7px; background: rgb(255 255 255 / 10%); font-size: 0.8rem; font-weight: 700; }
+#position-readout { margin-top: 6px; color: #f5f1e8; font-variant-numeric: tabular-nums; }
+.loading-message, .error-message { position: fixed; inset: 50% auto auto 50%; transform: translate(-50%, -50%); padding: 12px 18px; border-radius: 10px; background: rgb(10 16 24 / 80%); color: #f5f1e8; }
+.error-message { color: #ffb4a7; }
+
+@media (max-width: 600px) {
+  .hud { padding: 14px; }
+  .brand-panel { top: 14px; left: 14px; }
+  .controls-panel { top: auto; right: 14px; bottom: 14px; }
+  .coordinates-panel { left: 14px; bottom: 14px; }
+  .brand-panel, .controls-panel, .coordinates-panel { padding: 11px 13px; }
+}
